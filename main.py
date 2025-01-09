@@ -8,13 +8,18 @@ def encrypt_message(message, key, mode):
     cipher = AES.new(key, mode)  # Menggunakan mode yang dipilih
     ct_bytes = cipher.encrypt(pad(message.encode(), AES.block_size))
     iv = cipher.iv if mode == AES.MODE_CBC else b''  # Hanya CBC yang membutuhkan IV
-    return iv + ct_bytes  # Gabungkan IV dan ciphertext jika mode CBC
+    return iv + ct_bytes if iv else ct_bytes  # Gabungkan IV dan ciphertext jika mode CBC
 
 # Fungsi untuk mendekripsi pesan
 def decrypt_message(ciphertext, key, mode):
-    iv = ciphertext[:AES.block_size] if mode == AES.MODE_CBC else b''  # Ambil IV jika mode CBC
-    ct = ciphertext[AES.block_size:]  # Ambil ciphertext
-    cipher = AES.new(key, mode, iv) if iv else AES.new(key, mode)
+    if mode == AES.MODE_CBC:
+        iv = ciphertext[:AES.block_size]  # Ambil IV dari ciphertext jika mode CBC
+        ct = ciphertext[AES.block_size:]  # Ambil ciphertext
+        cipher = AES.new(key, mode, iv)
+    else:
+        ct = ciphertext  # Untuk ECB, tidak ada IV
+        cipher = AES.new(key, mode)
+    
     pt = unpad(cipher.decrypt(ct), AES.block_size)
     return pt.decode()
 
